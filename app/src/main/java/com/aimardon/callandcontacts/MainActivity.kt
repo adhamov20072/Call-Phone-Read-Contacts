@@ -25,47 +25,44 @@ import kotlinx.coroutines.launch
 class MainActivity : AppCompatActivity() {
     lateinit var binding: ActivityMainBinding
     lateinit var requestPermission: ActivityResultLauncher<String>
+    lateinit var requestPermissionCall: ActivityResultLauncher<String>
     lateinit var adapter: Adapter
     val arraylist = ArrayList<PNdata>()
-
+    var number:String=""
     @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        adapter = Adapter {
-            Log.d("keylari", it.phone)
-        }
-        requestPermission = registerForActivityResult(ActivityResultContracts.RequestPermission())
-        {
-            if (it) {
-                GlobalScope.launch {
-                    readContacts()
-                    adapter.submitList(arraylist)
-                }.start()
-            }
-        }
-        val given = ContextCompat.checkSelfPermission(
-            this,
-            android.Manifest.permission.READ_CONTACTS
-        ) == PackageManager.PERMISSION_GRANTED
-        if (given) {
-            GlobalScope.launch {
-                readContacts()
-                adapter.submitList(arraylist)
-            }.start()
-        } else {
-            requestPermission.launch(android.Manifest.permission.READ_CONTACTS)
+        adapter = Adapter() {
+            number=it.phone
+            call(it.phone)
+            //Toast.makeText(this,number.toString(), Toast.LENGTH_SHORT).show()
         }
         binding.recyclerView.adapter = adapter
+        requestPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+            if (it) {
+                    readContacts()
+                    adapter.submitList(arraylist)
+            }
+        }
+        permissionContact()
+        requestPermissionCall = registerForActivityResult(ActivityResultContracts.RequestPermission()){
+            if (it){
+                call(number)
+            }
+        }
+        permissionCall()
     }
+
+
 
     fun call(number: String) {
         startActivity(Intent(Intent.ACTION_CALL, Uri.parse("tel:$number")))
     }
 
     @SuppressLint("Recycle", "Range")
-    suspend fun readContacts() {
+     fun readContacts() {
         val phoneData =
             contentResolver.query(
                 ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
@@ -82,6 +79,31 @@ class MainActivity : AppCompatActivity() {
                     phoneData.getString(phoneData.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
                 arraylist.add(PNdata(name, phone))
             }
+        }
+    }
+    fun permissionContact(){
+        val given = ContextCompat.checkSelfPermission(
+            this,
+            android.Manifest.permission.READ_CONTACTS
+        ) == PackageManager.PERMISSION_GRANTED
+        if (given) {
+                readContacts()
+                adapter.submitList(arraylist)
+        } else {
+            requestPermission.launch(android.Manifest.permission.READ_CONTACTS)
+        }
+    }
+    fun permissionCall(){
+        val given = ContextCompat.checkSelfPermission(
+            this,
+            android.Manifest.permission.CALL_PHONE
+        ) == PackageManager.PERMISSION_GRANTED
+        if (given) {
+                readContacts()
+                adapter.submitList(arraylist)
+            }
+         else {
+            requestPermission.launch(android.Manifest.permission.READ_CONTACTS)
         }
     }
 }

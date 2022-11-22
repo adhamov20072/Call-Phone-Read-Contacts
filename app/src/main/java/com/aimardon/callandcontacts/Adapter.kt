@@ -7,10 +7,10 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.aimardon.callandcontacts.databinding.RecyclerItemLayoutBinding
 
-class Adapter(val onClickListener: (PNdata) -> Unit) :
-    ListAdapter<PNdata, Adapter.MyViewHolder>(diffUtil) {
+class Adapter: ListAdapter<PNdata, Adapter.MyViewHolder>(diffUtil) {
+    var listener:Click ?=null
     class MyViewHolder(val binding: RecyclerItemLayoutBinding) :
-        RecyclerView.ViewHolder(binding.root) {}
+        RecyclerView.ViewHolder(binding.root)
 
     companion object {
         val diffUtil = object : DiffUtil.ItemCallback<PNdata>() {
@@ -39,7 +39,13 @@ class Adapter(val onClickListener: (PNdata) -> Unit) :
         holder.binding.Name.text = item.name
         holder.binding.NUmber.text = item.phone
         holder.itemView.setOnClickListener {
-            onClickListener(item)
+
         }
+    }
+    interface Click{
+        fun clicklistener()
+    }
+    fun onClickListenerr(click: Click){
+        listener=click
     }
 }
